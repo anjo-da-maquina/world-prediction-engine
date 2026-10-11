@@ -125,7 +125,7 @@ class RiskTests(unittest.TestCase):
         import_bundle(self.db, {'scenarios': [s]}); evaluate(self.db, A)
         with tempfile.TemporaryDirectory() as tmp:
             f = Path(tmp)/'report.html'; report(self.db, f, A)
-            text = f.read_text()
+            text = f.read_text(encoding="utf-8")
             self.assertNotIn('<script>', text)
             self.assertIn('&lt;script&gt;', text)
     def test_demo_live_mixing(self):
