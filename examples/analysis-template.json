@@ -1,0 +1,18 @@
+{
+  "entities": [{"id":"ENTITY_ID","name":"確認した企業名へ置換","kind":"company","region":"JPN"}],
+  "links": [{
+    "id":"LINK_ID","event_id":"EVENT_ID","entity_id":"ENTITY_ID","axis":"benefit",
+    "statement":"対象制度が実施された場合の受益経路を記載",
+    "status":"hypothesis","evidence_ids":["EVIDENCE_ID"],
+    "alternative":"制度不成立・競争・費用増等の別の展開を記載",
+    "created_at":"2026-10-06T00:00:00+00:00"
+  }],
+  "forecasts": [{
+    "id":"FORECAST_ID","event_id":"EVENT_ID","entity_id":"ENTITY_ID",
+    "action_kind":"investment_announcement","question":"対象企業が期限内に設備投資を公式発表するか",
+    "created_at":"2026-10-06T00:00:00+00:00","deadline":"2027-01-06T00:00:00+00:00",
+    "probability":0.4,"method":"manual_estimate","evidence_ids":["EVIDENCE_ID"],
+    "resolution_rule":"具体的な判定元、対象設備、発表期間、否定判定の網羅性要件を記載",
+    "counterevidence":"予測が成立しない条件と未確認事項を記載"
+  }]
+}

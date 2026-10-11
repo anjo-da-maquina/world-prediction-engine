@@ -1,0 +1,128 @@
+{
+  "sources": [
+    {
+      "id": "fed_press",
+      "type": "rss",
+      "url": "https://www.federalreserve.gov/feeds/press_all.xml",
+      "interval_seconds": 3600
+    },
+    {
+      "id": "bis_research",
+      "type": "rss",
+      "url": "https://www.bis.org/doclist/bis_fsi_publs.rss",
+      "interval_seconds": 3600
+    },
+    {
+      "id": "wb_jpn_inflation",
+      "type": "worldbank",
+      "country": "JPN",
+      "indicator": "FP.CPI.TOTL.ZG",
+      "start": 1960,
+      "interval_seconds": 86400
+    },
+    {
+      "id": "wb_usa_growth",
+      "type": "worldbank",
+      "country": "USA",
+      "indicator": "NY.GDP.MKTP.KD.ZG",
+      "start": 1960,
+      "interval_seconds": 86400
+    },
+    {
+      "id": "wb_world_growth",
+      "type": "worldbank",
+      "country": "WLD",
+      "indicator": "NY.GDP.MKTP.KD.ZG",
+      "start": 1960,
+      "interval_seconds": 86400
+    },
+    {
+      "id": "diet_subsidies",
+      "type": "kokkai",
+      "query": "補助金",
+      "lookback_days": 30,
+      "interval_seconds": 86400
+    }
+  ],
+  "topic_keywords": {
+    "financial_stress": [
+      "bank failure",
+      "liquidity",
+      "credit risk",
+      "銀行破綻",
+      "信用不安"
+    ],
+    "inflation": [
+      "inflation",
+      "consumer prices",
+      "物価",
+      "インフレ"
+    ],
+    "conflict": [
+      "armed conflict",
+      "military attack",
+      "武力衝突",
+      "軍事攻撃"
+    ],
+    "energy": [
+      "oil",
+      "natural gas",
+      "原油",
+      "天然ガス"
+    ],
+    "ai": [
+      "artificial intelligence",
+      "AI",
+      "生成AI",
+      "人工知能"
+    ]
+  },
+  "signals": [
+    {
+      "variable": "received_items",
+      "region": "fed_press",
+      "source": "fed_press",
+      "baseline": 5,
+      "window": 30,
+      "max_gap_days": 1,
+      "horizon_days": 7
+    },
+    {
+      "variable": "received_items",
+      "region": "bis_research",
+      "source": "bis_research",
+      "baseline": 5,
+      "window": 30,
+      "max_gap_days": 1,
+      "horizon_days": 7
+    },
+    {
+      "variable": "mentions.inflation",
+      "region": "fed_press",
+      "source": "fed_press",
+      "baseline": 0,
+      "window": 30,
+      "max_gap_days": 1,
+      "horizon_days": 7
+    },
+    {
+      "variable": "FP.CPI.TOTL.ZG",
+      "region": "JPN",
+      "source": "wb_jpn_inflation",
+      "baseline": 2,
+      "window": 10,
+      "max_gap_days": 366,
+      "horizon_days": 7
+    }
+  ],
+  "questions": [
+    {
+      "id": "fed-captured-volume-7d",
+      "variable": "received_items",
+      "region": "fed_press",
+      "source": "fed_press",
+      "horizon_days": 7,
+      "threshold": 20
+    }
+  ]
+}

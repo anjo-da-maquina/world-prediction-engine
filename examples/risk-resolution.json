@@ -1,0 +1,11 @@
+{
+  "scenario_id": "equipment-protection",
+  "revision": 1,
+  "resolved_at": "2026-01-09T00:00:00+00:00",
+  "occurred": null,
+  "evidence_ids": [
+    "demo-e1"
+  ],
+  "rationale": "架空資料では期限内の結果を確定できない",
+  "coverage_complete": false
+}

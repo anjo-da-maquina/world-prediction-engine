@@ -1,0 +1,154 @@
+{
+  "version": "0.2.0",
+  "started_at": "2026-10-06T12:00:00+00:00",
+  "mode": "mock_fixture",
+  "sources": [
+    {
+      "id": "fed_press",
+      "status": "ok",
+      "new_documents": 0,
+      "seen_items": 1
+    },
+    {
+      "id": "bis_research",
+      "status": "ok",
+      "new_documents": 0,
+      "seen_items": 1
+    },
+    {
+      "id": "wb_jpn_inflation",
+      "status": "ok",
+      "inserted": 1,
+      "returned": 1
+    },
+    {
+      "id": "wb_usa_growth",
+      "status": "ok",
+      "inserted": 1,
+      "returned": 1
+    },
+    {
+      "id": "wb_world_growth",
+      "status": "ok",
+      "inserted": 1,
+      "returned": 1
+    }
+  ],
+  "signals": [
+    {
+      "variable": "received_items",
+      "region": "fed_press",
+      "samples": 1,
+      "stale_days": 1,
+      "derivatives": {
+        "status": "insufficient_or_incompatible_data",
+        "reason": "need at least 8 known observations"
+      },
+      "integral": {
+        "status": "insufficient_or_incompatible_data",
+        "reason": "need >=2 samples, finite baseline and positive gap limit"
+      },
+      "projection": {
+        "status": "insufficient_or_incompatible_data",
+        "reason": "need >=30 samples; horizon 1..365; paths 100..10000"
+      }
+    },
+    {
+      "variable": "received_items",
+      "region": "bis_research",
+      "samples": 1,
+      "stale_days": 1,
+      "derivatives": {
+        "status": "insufficient_or_incompatible_data",
+        "reason": "need at least 8 known observations"
+      },
+      "integral": {
+        "status": "insufficient_or_incompatible_data",
+        "reason": "need >=2 samples, finite baseline and positive gap limit"
+      },
+      "projection": {
+        "status": "insufficient_or_incompatible_data",
+        "reason": "need >=30 samples; horizon 1..365; paths 100..10000"
+      }
+    },
+    {
+      "variable": "mentions.inflation",
+      "region": "fed_press",
+      "samples": 1,
+      "stale_days": 1,
+      "derivatives": {
+        "status": "insufficient_or_incompatible_data",
+        "reason": "need at least 8 known observations"
+      },
+      "integral": {
+        "status": "insufficient_or_incompatible_data",
+        "reason": "need >=2 samples, finite baseline and positive gap limit"
+      },
+      "projection": {
+        "status": "insufficient_or_incompatible_data",
+        "reason": "need >=30 samples; horizon 1..365; paths 100..10000"
+      }
+    },
+    {
+      "variable": "FP.CPI.TOTL.ZG",
+      "region": "JPN",
+      "samples": 1,
+      "stale_days": 644,
+      "derivatives": {
+        "status": "insufficient_or_incompatible_data",
+        "reason": "need at least 8 known observations"
+      },
+      "integral": {
+        "status": "insufficient_or_incompatible_data",
+        "reason": "need >=2 samples, finite baseline and positive gap limit"
+      },
+      "projection": {
+        "status": "insufficient_or_incompatible_data",
+        "reason": "daily projection needs fresh observations"
+      }
+    }
+  ],
+  "forecasts": [
+    {
+      "question_id": "fed-captured-volume-7d",
+      "status": "pending_data",
+      "reason": "need at least 8 known observations"
+    }
+  ],
+  "resolutions": [],
+  "warning": "SIMULATED RSS/API fixture. Not real world observations or forecasts.",
+  "source_health": [
+    {
+      "source": "bis_research",
+      "polled_at": "2026-10-06T12:00:00+00:00",
+      "ok": 1,
+      "detail": "{\"new_documents\": 0, \"seen_items\": 1}"
+    },
+    {
+      "source": "fed_press",
+      "polled_at": "2026-10-06T12:00:00+00:00",
+      "ok": 1,
+      "detail": "{\"new_documents\": 0, \"seen_items\": 1}"
+    },
+    {
+      "source": "wb_jpn_inflation",
+      "polled_at": "2026-10-06T12:00:00+00:00",
+      "ok": 1,
+      "detail": "{\"inserted\": 1, \"returned\": 1}"
+    },
+    {
+      "source": "wb_usa_growth",
+      "polled_at": "2026-10-06T12:00:00+00:00",
+      "ok": 1,
+      "detail": "{\"inserted\": 1, \"returned\": 1}"
+    },
+    {
+      "source": "wb_world_growth",
+      "polled_at": "2026-10-06T12:00:00+00:00",
+      "ok": 1,
+      "detail": "{\"inserted\": 1, \"returned\": 1}"
+    }
+  ],
+  "finished_at": "2026-10-06T03:51:17.970935+00:00",
+  "status": "ok"
+}

@@ -1,0 +1,9 @@
+services:
+  wpe:
+    build: .
+    restart: unless-stopped
+    volumes:
+      - ./data:/app/data
+      - ./outputs:/app/outputs
+      - ./config:/app/config:ro
+    stop_grace_period: 70s

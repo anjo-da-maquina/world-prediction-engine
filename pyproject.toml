@@ -1,0 +1,19 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "world-prediction-engine"
+version = "0.4.0"
+description = "Auditable point-in-time forecasting research prototype"
+requires-python = ">=3.10"
+dependencies = []
+
+[project.scripts]
+wpe = "wpe.__main__:main"
+wpe-risk = "wpe.risk:main"
+wpe-collect = "wpe.autonomous:main"
+wpe-actors = "wpe.actors:main"
+
+[tool.setuptools.packages.find]
+include = ["wpe*"]

@@ -1,0 +1,140 @@
+{
+  "policy_events": [
+    {
+      "id": "6a933406d3f2b445b3fd54a9a915989e",
+      "evidence_id": "1d951ec2d6cee9feb05cd21edb9aedfb",
+      "event_type": "policy_mention",
+      "title": "【架空データ】設備導入の補助金制度が提案された。",
+      "status": "candidate",
+      "created_at": "2026-01-01T00:00:00+00:00",
+      "current_status": "candidate"
+    }
+  ],
+  "event_reviews": [],
+  "entities": [
+    {
+      "id": "fictional-a",
+      "name": "架空企業A",
+      "kind": "company",
+      "region": "FICTION"
+    }
+  ],
+  "interest_links": [
+    {
+      "id": "fictional-benefit",
+      "event_id": "6a933406d3f2b445b3fd54a9a915989e",
+      "entity_id": "fictional-a",
+      "axis": "benefit",
+      "statement": "制度が成立すれば、対象設備への受注機会が増える可能性",
+      "status": "hypothesis",
+      "evidence_ids": "[\"1d951ec2d6cee9feb05cd21edb9aedfb\"]",
+      "alternative": "制度不成立、競争激化、追加費用で利益が減る可能性",
+      "created_at": "2026-01-01T00:00:00+00:00"
+    }
+  ],
+  "action_forecasts": [
+    {
+      "id": "fictional-investment",
+      "event_id": "6a933406d3f2b445b3fd54a9a915989e",
+      "entity_id": "fictional-a",
+      "action_kind": "investment_announcement",
+      "question": "架空企業Aが2026年2月1日までに設備投資を発表するか",
+      "created_at": "2026-01-01T00:00:00+00:00",
+      "deadline": "2026-02-01T00:00:00+00:00",
+      "probability": 0.4,
+      "method": "manual_estimate",
+      "evidence_ids": "[\"1d951ec2d6cee9feb05cd21edb9aedfb\"]",
+      "resolution_rule": "架空の公式発表で設備投資を確認。記録不十分なら未解決。",
+      "counterevidence": "制度はまだ提案段階、資金制約も未確認",
+      "recorded_at": "2026-10-06T06:27:35.299047+00:00"
+    }
+  ],
+  "action_outcomes": [
+    {
+      "forecast_id": "fictional-investment",
+      "occurred": 1,
+      "resolved_at": "2026-02-02T00:00:00+00:00",
+      "evidence_ids": "[\"9f8da46232fd2158a8ac91512da9bebc\"]",
+      "rationale": "架空の発表記録で確認",
+      "brier": 0.36
+    }
+  ],
+  "evidence_spans": [
+    {
+      "id": "1d951ec2d6cee9feb05cd21edb9aedfb",
+      "text_id": "e5216ed32bd47a7785bea6339dbccc03",
+      "start": 0,
+      "end": 24,
+      "quote": "【架空データ】設備導入の補助金制度が提案された。",
+      "available_at": "2026-01-01T00:00:00+00:00"
+    },
+    {
+      "id": "9f8da46232fd2158a8ac91512da9bebc",
+      "text_id": "54b14a89d5102987043f8fa663311831",
+      "start": 0,
+      "end": 34,
+      "quote": "【架空データ】架空企業Aは2026年1月20日に設備投資を発表した。",
+      "available_at": "2026-02-02T00:00:00+00:00"
+    }
+  ],
+  "action_candidates": [
+    {
+      "event_id": "6a933406d3f2b445b3fd54a9a915989e",
+      "entity_id": "fictional-a",
+      "action_kind": "investment_announcement",
+      "status": "conditional_hypothesis",
+      "condition": "The claimed interest is real, the policy takes effect, and capacity/resources allow the action.",
+      "counterevidence": "制度不成立、競争激化、追加費用で利益が減る可能性",
+      "evidence_ids": [
+        "1d951ec2d6cee9feb05cd21edb9aedfb"
+      ],
+      "probability_estimate": {
+        "status": "pending_data",
+        "n": 1,
+        "required": 10
+      },
+      "note": "Template-generated candidate, not a verified intention or an automatically registered forecast."
+    },
+    {
+      "event_id": "6a933406d3f2b445b3fd54a9a915989e",
+      "entity_id": "fictional-a",
+      "action_kind": "market_entry",
+      "status": "conditional_hypothesis",
+      "condition": "The claimed interest is real, the policy takes effect, and capacity/resources allow the action.",
+      "counterevidence": "制度不成立、競争激化、追加費用で利益が減る可能性",
+      "evidence_ids": [
+        "1d951ec2d6cee9feb05cd21edb9aedfb"
+      ],
+      "probability_estimate": {
+        "status": "pending_data",
+        "n": 0,
+        "required": 10
+      },
+      "note": "Template-generated candidate, not a verified intention or an automatically registered forecast."
+    },
+    {
+      "event_id": "6a933406d3f2b445b3fd54a9a915989e",
+      "entity_id": "fictional-a",
+      "action_kind": "capacity_expansion",
+      "status": "conditional_hypothesis",
+      "condition": "The claimed interest is real, the policy takes effect, and capacity/resources allow the action.",
+      "counterevidence": "制度不成立、競争激化、追加費用で利益が減る可能性",
+      "evidence_ids": [
+        "1d951ec2d6cee9feb05cd21edb9aedfb"
+      ],
+      "probability_estimate": {
+        "status": "pending_data",
+        "n": 0,
+        "required": 10
+      },
+      "note": "Template-generated candidate, not a verified intention or an automatically registered forecast."
+    }
+  ],
+  "notes": [
+    "Benefit, influence and anticipation are separate claims.",
+    "Candidate extraction does not verify enactment.",
+    "Forecast probabilities are manual or historical base-rate estimates."
+  ],
+  "mode": "FICTIONAL DEMO",
+  "warning": "All names, events and probabilities are fictional test fixtures."
+}
