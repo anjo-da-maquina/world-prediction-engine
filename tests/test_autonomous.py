@@ -13,6 +13,39 @@ def config():
             'signals':[{'variable':'received_items','region':'rss','source':'rss','baseline':0,'max_gap_days':1}],
             'questions':[{'id':'q','variable':'received_items','region':'rss','source':'rss','horizon_days':7,'threshold':10}]}
 class Tests(unittest.TestCase):
+    def test_failed_source_retry_and_recovery(self):
+        from urllib.error import HTTPError
+        now=datetime(2026,10,5,12,tzinfo=timezone.utc)
+        def denied(_): raise HTTPError('https://example.org/feed',403,'Forbidden',{},None)
+        with tempfile.TemporaryDirectory() as d:
+            db=Path(d)/'db';out=Path(d)/'out'
+            failed=run_cycle(config(),db,out,now,denied)
+            self.assertEqual(failed['sources'][0]['http_status'],403)
+            waiting=run_cycle(config(),db,out,now+timedelta(seconds=299),lambda _:self.fail('early retry'))
+            self.assertEqual(waiting['sources'][0]['status'],'not_due')
+            self.assertEqual(waiting['sources'][0]['next_poll_at'],(now+timedelta(seconds=300)).isoformat())
+            recovered=run_cycle(config(),db,out,now+timedelta(seconds=300),lambda _:RSS)
+            self.assertEqual(recovered['status'],'ok')
+            self.assertEqual(recovered['source_health'][0]['ok'],1)
+    def test_removed_source_does_not_degrade_health(self):
+        now=datetime(2026,10,5,12,tzinfo=timezone.utc)
+        with tempfile.TemporaryDirectory() as d:
+            db=Path(d)/'db';out=Path(d)/'out'
+            def bad(_): raise OSError('offline')
+            run_cycle(config(),db,out,now,bad)
+            c=config();c['sources'][0]['id']='replacement';c['signals']=[];c['questions']=[]
+            result=run_cycle(c,db,out,now+timedelta(minutes=1),lambda _:RSS)
+            self.assertEqual(result['status'],'ok')
+            self.assertEqual([h['source'] for h in result['source_health']],['replacement'])
+    def test_fetch_preserves_http_error(self):
+        from unittest.mock import patch,MagicMock
+        from urllib.error import HTTPError
+        from wpe.autonomous import fetch_bytes
+        opener=MagicMock();opener.open.side_effect=HTTPError('https://example.org',503,'Unavailable',{},None)
+        with patch('wpe.autonomous.urllib.request.build_opener',return_value=opener):
+            with self.assertRaises(HTTPError) as caught:fetch_bytes('https://example.org')
+        self.assertEqual(caught.exception.code,503)
+        self.assertEqual(opener.open.call_count,2)
     def test_parse(self):
         r=parse_feed(RSS);self.assertEqual(r[0]['key'],'a');self.assertIn('+00:00',r[0]['published_at'])
     def test_atom(self):

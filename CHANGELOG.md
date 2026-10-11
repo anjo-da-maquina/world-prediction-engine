@@ -20,3 +20,12 @@
 ## 0.1.0
 
 - 時点別データ保存、閾値予測、時間順の評価、CLI。
+
+## Collection reliability update
+
+- Preserve HTTP error codes in collection failures.
+- Retry failed sources after at most 300 seconds; successful polling intervals are unchanged.
+- Include next_poll_at in source health and waiting status.
+- Ignore removed sources when calculating current health; retain historical polls.
+- Add Windows Python 3.11 CI and failure/recovery regression tests.
+- Existing databases require no schema migration.

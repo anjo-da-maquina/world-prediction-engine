@@ -8,6 +8,7 @@ import signal
 import time
 import urllib.parse
 import urllib.request
+import urllib.error
 import xml.etree.ElementTree as ET
 from contextlib import contextmanager
 from datetime import datetime,timezone,timedelta
@@ -77,7 +78,24 @@ def fetch_bytes(url):
             if len(body)>MAX_BYTES: raise ValueError('response exceeds 5 MiB')
             return body
         except OSError as exc: last=exc
-    raise OSError('source fetch failed after 2 attempts') from last
+    raise last
+
+def error_detail(exc):
+    """Expose useful diagnostics without copying arbitrary URLs or response bodies."""
+    detail={'error_type':type(exc).__name__}
+    if isinstance(exc,urllib.error.HTTPError):
+        detail['http_status']=exc.code
+        detail['reason']='HTTP request rejected or unavailable'
+    elif isinstance(exc,urllib.error.URLError):
+        detail['reason']='Network, proxy, DNS or TLS connection failed'
+        detail['cause_type']=type(exc.reason).__name__
+    elif isinstance(exc,TimeoutError): detail['reason']='Request timed out'
+    else: detail['reason']='Collector failed; inspect source and local configuration'
+    return detail
+
+def poll_delay(source,ok):
+    # Retry a failed poll sooner, without tight loops or changing successful cadence.
+    return source['interval_seconds'] if ok else min(source['interval_seconds'],300)
 
 def archive(db,sid,url,body,when):
     digest=hashlib.sha256(body).hexdigest()
@@ -217,17 +235,19 @@ def run_cycle(config,db_path,output_dir,now=None,fetcher=fetch_bytes):
                     'forecasts':[],'resolutions':[],'warning':'Coverage is limited to configured sources. Mentions are not verified events.'}
             rules=config.get('topic_keywords',{})
             for s in config['sources']:
-                last=db.execute('SELECT polled_at FROM polls WHERE source=? ORDER BY id DESC LIMIT 1',(s['id'],)).fetchone()
-                if last and (now-datetime.fromisoformat(last[0])).total_seconds()<s['interval_seconds']:
-                    result['sources'].append({'id':s['id'],'status':'not_due'}); continue
+                last=db.execute('SELECT polled_at,ok FROM polls WHERE source=? ORDER BY id DESC LIMIT 1',(s['id'],)).fetchone()
+                due=datetime.fromisoformat(last[0])+timedelta(seconds=poll_delay(s,last[1])) if last else now
+                if now<due:
+                    result['sources'].append({'id':s['id'],'status':'not_due','next_poll_at':due.isoformat()}); continue
                 try:
                     detail=collect(db,s,when,rules,fetcher)
                     with db: db.execute('INSERT INTO polls(source,polled_at,ok,detail) VALUES(?,?,1,?)',(s['id'],when,json.dumps(detail)))
                     result['sources'].append({'id':s['id'],'status':'ok',**detail})
                 except Exception as exc:
                     # Isolate one broken collector and record failure, never fabricate observations.
-                    with db: db.execute('INSERT INTO polls(source,polled_at,ok,detail) VALUES(?,?,0,?)',(s['id'],when,type(exc).__name__))
-                    result['sources'].append({'id':s['id'],'status':'failed','error_type':type(exc).__name__})
+                    detail=error_detail(exc)
+                    with db: db.execute('INSERT INTO polls(source,polled_at,ok,detail) VALUES(?,?,0,?)',(s['id'],when,json.dumps(detail)))
+                    result['sources'].append({'id':s['id'],'status':'failed',**detail,'next_poll_at':(now+timedelta(seconds=poll_delay(s,False))).isoformat()})
             for s in config['sources']:
                 if s['type']=='rss': freeze_received_counts(db,s['id'],today,rules)
             for spec in config.get('signals',[]):
@@ -269,6 +289,10 @@ def run_cycle(config,db_path,output_dir,now=None,fetcher=fetch_bytes):
                 except ValueError as exc: result['resolutions'].append({'id':row['id'],'status':'pending_data','reason':str(exc)})
             result['source_health']=[dict(r) for r in db.execute('''SELECT p.source,p.polled_at,p.ok,p.detail FROM polls p
                 JOIN (SELECT source,MAX(id) id FROM polls GROUP BY source) last ON last.id=p.id''')]
+            configured={s['id']:s for s in config['sources']}
+            result['source_health']=[h for h in result['source_health'] if h['source'] in configured]
+            for h in result['source_health']:
+                h['next_poll_at']=(datetime.fromisoformat(h['polled_at'])+timedelta(seconds=poll_delay(configured[h['source']],h['ok']))).isoformat()
             result['finished_at']=utcnow().isoformat()
             failures=sum(not r['ok'] for r in result['source_health'])
             result['status']='degraded' if failures else 'ok'
@@ -312,7 +336,7 @@ def main():
             print(json.dumps({'status':result['status'],'started_at':result['started_at'],
                              'sources':result['sources'],'forecasts':len(result['forecasts'])},ensure_ascii=False),flush=True)
         except Exception as exc:
-            print(json.dumps({'status':'cycle_failed','error_type':type(exc).__name__}),flush=True)
+            print(json.dumps({'status':'cycle_failed',**error_detail(exc)}),flush=True)
             if a.command=='once': p.exit(1)
         if a.command=='once': break
         until=time.monotonic()+a.tick_seconds
