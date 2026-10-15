@@ -1,0 +1,484 @@
+{
+  "sources": [
+    {
+      "id": "fed_press",
+      "type": "rss",
+      "url": "https://www.federalreserve.gov/feeds/press_all.xml",
+      "interval_seconds": 3600
+    },
+    {
+      "id": "bis_research",
+      "type": "rss",
+      "url": "https://www.bis.org/doclist/bis_fsi_publs.rss",
+      "interval_seconds": 3600
+    },
+    {
+      "id": "wb_jpn_inflation",
+      "type": "worldbank",
+      "country": "JPN",
+      "indicator": "FP.CPI.TOTL.ZG",
+      "start": 1960,
+      "interval_seconds": 86400
+    },
+    {
+      "id": "wb_usa_growth",
+      "type": "worldbank",
+      "country": "USA",
+      "indicator": "NY.GDP.MKTP.KD.ZG",
+      "start": 1960,
+      "interval_seconds": 86400
+    },
+    {
+      "id": "wb_world_growth",
+      "type": "worldbank",
+      "country": "WLD",
+      "indicator": "NY.GDP.MKTP.KD.ZG",
+      "start": 1960,
+      "interval_seconds": 86400
+    },
+    {
+      "id": "diet_subsidies",
+      "type": "kokkai",
+      "query": "補助金",
+      "lookback_days": 30,
+      "interval_seconds": 86400
+    },
+    {
+      "id": "global_ny_gdp_mktp_kd_zg",
+      "type": "worldbank",
+      "country": "all",
+      "indicator": "NY.GDP.MKTP.KD.ZG",
+      "start": 1990,
+      "interval_seconds": 604800
+    },
+    {
+      "id": "global_fp_cpi_totl_zg",
+      "type": "worldbank",
+      "country": "all",
+      "indicator": "FP.CPI.TOTL.ZG",
+      "start": 1990,
+      "interval_seconds": 604800
+    },
+    {
+      "id": "global_sl_uem_totl_zs",
+      "type": "worldbank",
+      "country": "all",
+      "indicator": "SL.UEM.TOTL.ZS",
+      "start": 1990,
+      "interval_seconds": 604800
+    },
+    {
+      "id": "global_sp_pop_totl",
+      "type": "worldbank",
+      "country": "all",
+      "indicator": "SP.POP.TOTL",
+      "start": 1990,
+      "interval_seconds": 604800
+    },
+    {
+      "id": "global_sp_urb_totl_in_zs",
+      "type": "worldbank",
+      "country": "all",
+      "indicator": "SP.URB.TOTL.IN.ZS",
+      "start": 1990,
+      "interval_seconds": 604800
+    },
+    {
+      "id": "global_se_sec_enrr",
+      "type": "worldbank",
+      "country": "all",
+      "indicator": "SE.SEC.ENRR",
+      "start": 1990,
+      "interval_seconds": 604800
+    },
+    {
+      "id": "global_eg_elc_accs_zs",
+      "type": "worldbank",
+      "country": "all",
+      "indicator": "EG.ELC.ACCS.ZS",
+      "start": 1990,
+      "interval_seconds": 604800
+    },
+    {
+      "id": "global_it_net_user_zs",
+      "type": "worldbank",
+      "country": "all",
+      "indicator": "IT.NET.USER.ZS",
+      "start": 1990,
+      "interval_seconds": 604800
+    },
+    {
+      "id": "global_ne_exp_gnfs_zs",
+      "type": "worldbank",
+      "country": "all",
+      "indicator": "NE.EXP.GNFS.ZS",
+      "start": 1990,
+      "interval_seconds": 604800
+    },
+    {
+      "id": "global_vc_ihr_psrc_p5",
+      "type": "worldbank",
+      "country": "all",
+      "indicator": "VC.IHR.PSRC.P5",
+      "start": 1990,
+      "interval_seconds": 604800
+    },
+    {
+      "id": "global_sh_xpd_chex_gd_zs",
+      "type": "worldbank",
+      "country": "all",
+      "indicator": "SH.XPD.CHEX.GD.ZS",
+      "start": 1990,
+      "interval_seconds": 604800
+    },
+    {
+      "id": "global_bx_klt_dinv_wd_gd_zs",
+      "type": "worldbank",
+      "country": "all",
+      "indicator": "BX.KLT.DINV.WD.GD.ZS",
+      "start": 1990,
+      "interval_seconds": 604800
+    },
+    {
+      "id": "global_ms_mil_xpnd_gd_zs",
+      "type": "worldbank",
+      "country": "all",
+      "indicator": "MS.MIL.XPND.GD.ZS",
+      "start": 1990,
+      "interval_seconds": 604800,
+      "domain": "military"
+    },
+    {
+      "id": "global_ms_mil_xpnd_cd",
+      "type": "worldbank",
+      "country": "all",
+      "indicator": "MS.MIL.XPND.CD",
+      "start": 1990,
+      "interval_seconds": 604800,
+      "domain": "military"
+    },
+    {
+      "id": "global_ms_mil_totl_p1",
+      "type": "worldbank",
+      "country": "all",
+      "indicator": "MS.MIL.TOTL.P1",
+      "start": 1990,
+      "interval_seconds": 604800,
+      "domain": "military"
+    },
+    {
+      "id": "global_gc_xpn_totl_gd_zs",
+      "type": "worldbank",
+      "country": "all",
+      "indicator": "GC.XPN.TOTL.GD.ZS",
+      "start": 1990,
+      "interval_seconds": 604800,
+      "domain": "budget"
+    },
+    {
+      "id": "global_gc_rev_xgrt_gd_zs",
+      "type": "worldbank",
+      "country": "all",
+      "indicator": "GC.REV.XGRT.GD.ZS",
+      "start": 1990,
+      "interval_seconds": 604800,
+      "domain": "budget"
+    },
+    {
+      "id": "global_gc_dod_totl_gd_zs",
+      "type": "worldbank",
+      "country": "all",
+      "indicator": "GC.DOD.TOTL.GD.ZS",
+      "start": 1990,
+      "interval_seconds": 604800,
+      "domain": "budget"
+    },
+    {
+      "id": "global_gc_tax_totl_gd_zs",
+      "type": "worldbank",
+      "country": "all",
+      "indicator": "GC.TAX.TOTL.GD.ZS",
+      "start": 1990,
+      "interval_seconds": 604800,
+      "domain": "budget"
+    },
+    {
+      "id": "global_sm_pop_totl_zs",
+      "type": "worldbank",
+      "country": "all",
+      "indicator": "SM.POP.TOTL.ZS",
+      "start": 1990,
+      "interval_seconds": 604800,
+      "domain": "migration"
+    },
+    {
+      "id": "gdelt_conflict",
+      "type": "gdelt",
+      "query": "(\"armed conflict\" OR \"military attack\" OR ceasefire)",
+      "domain": "conflict",
+      "timespan": "24h",
+      "interval_seconds": 3600
+    },
+    {
+      "id": "gdelt_military",
+      "type": "gdelt",
+      "query": "(\"arms transfer\" OR \"military spending\" OR \"weapons procurement\")",
+      "domain": "military",
+      "timespan": "24h",
+      "interval_seconds": 3600
+    },
+    {
+      "id": "gdelt_diplomacy",
+      "type": "gdelt",
+      "query": "(sanctions OR \"diplomatic dispute\" OR \"border tensions\")",
+      "domain": "diplomacy",
+      "timespan": "24h",
+      "interval_seconds": 3600
+    },
+    {
+      "id": "gdelt_drugs",
+      "type": "gdelt",
+      "query": "(\"drug seizure\" OR \"drug trafficking\" OR \"fentanyl overdose\")",
+      "domain": "drugs",
+      "timespan": "24h",
+      "interval_seconds": 3600
+    },
+    {
+      "id": "gdelt_crime",
+      "type": "gdelt",
+      "query": "(\"crime statistics\" OR \"homicide rate\")",
+      "domain": "crime",
+      "timespan": "24h",
+      "interval_seconds": 3600
+    },
+    {
+      "id": "gdelt_justice",
+      "type": "gdelt",
+      "query": "(\"prosecution statistics\" OR \"court backlog\" OR \"judicial corruption\")",
+      "domain": "justice",
+      "timespan": "24h",
+      "interval_seconds": 3600
+    },
+    {
+      "id": "gdelt_policy",
+      "type": "gdelt",
+      "query": "(\"government subsidy\" OR \"public contract\" OR lobbying)",
+      "domain": "policy",
+      "timespan": "24h",
+      "interval_seconds": 3600
+    },
+    {
+      "id": "gdelt_finance",
+      "type": "gdelt",
+      "query": "(\"institutional investor\" OR \"asset manager\" OR \"sovereign wealth fund\")",
+      "domain": "finance",
+      "timespan": "24h",
+      "interval_seconds": 3600
+    },
+    {
+      "id": "gdelt_religion",
+      "type": "gdelt",
+      "query": "(\"religious affiliation\" OR \"religion survey\" OR \"religious restrictions\")",
+      "domain": "religion",
+      "timespan": "24h",
+      "interval_seconds": 3600
+    },
+    {
+      "id": "sec_1067983",
+      "type": "sec",
+      "cik": "1067983",
+      "domain": "finance",
+      "interval_seconds": 86400
+    },
+    {
+      "id": "sec_19617",
+      "type": "sec",
+      "cik": "19617",
+      "domain": "finance",
+      "interval_seconds": 86400
+    },
+    {
+      "id": "sec_886982",
+      "type": "sec",
+      "cik": "886982",
+      "domain": "finance",
+      "interval_seconds": 86400
+    },
+    {
+      "id": "eurostat_crim_off_cat",
+      "type": "eurostat",
+      "dataset": "crim_off_cat",
+      "domain": "crime",
+      "stage": "reported",
+      "definition": "Police-recorded offences by offence category. Recorded offences differ from actual incidence.",
+      "start": 2000,
+      "interval_seconds": 604800
+    },
+    {
+      "id": "eurostat_crim_just_ctz",
+      "type": "eurostat",
+      "dataset": "crim_just_ctz",
+      "domain": "justice",
+      "stage": "suspect",
+      "definition": "Suspects, prosecuted or convicted persons by citizenship, preserving legal status and citizenship dimensions. Citizenship is not migration status.",
+      "start": 2000,
+      "interval_seconds": 604800
+    },
+    {
+      "id": "eurostat_crim_pris_ctz",
+      "type": "eurostat",
+      "dataset": "crim_pris_ctz",
+      "domain": "justice",
+      "stage": "prisoner",
+      "definition": "Prisoners by citizenship. Prisoners include legal statuses that must not be assumed to be convicted; citizenship is not immigration status.",
+      "start": 2000,
+      "interval_seconds": 604800
+    },
+    {
+      "id": "sec_1067983_assets",
+      "type": "sec",
+      "cik": "1067983",
+      "concept": "Assets",
+      "domain": "corporate",
+      "interval_seconds": 604800
+    },
+    {
+      "id": "sec_1067983_liabilities",
+      "type": "sec",
+      "cik": "1067983",
+      "concept": "Liabilities",
+      "domain": "corporate",
+      "interval_seconds": 604800
+    },
+    {
+      "id": "sec_19617_assets",
+      "type": "sec",
+      "cik": "19617",
+      "concept": "Assets",
+      "domain": "corporate",
+      "interval_seconds": 604800
+    },
+    {
+      "id": "sec_19617_liabilities",
+      "type": "sec",
+      "cik": "19617",
+      "concept": "Liabilities",
+      "domain": "corporate",
+      "interval_seconds": 604800
+    },
+    {
+      "id": "sec_886982_assets",
+      "type": "sec",
+      "cik": "886982",
+      "concept": "Assets",
+      "domain": "corporate",
+      "interval_seconds": 604800
+    },
+    {
+      "id": "sec_886982_liabilities",
+      "type": "sec",
+      "cik": "886982",
+      "concept": "Liabilities",
+      "domain": "corporate",
+      "interval_seconds": 604800
+    },
+    {
+      "id": "unhcr_refugees_origin",
+      "type": "unhcr",
+      "direction": "origin",
+      "start": 1990,
+      "domain": "migration",
+      "interval_seconds": 2592000
+    },
+    {
+      "id": "unhcr_refugees_asylum",
+      "type": "unhcr",
+      "direction": "asylum",
+      "start": 1990,
+      "domain": "migration",
+      "interval_seconds": 2592000
+    }
+  ],
+  "topic_keywords": {
+    "financial_stress": [
+      "bank failure",
+      "liquidity",
+      "credit risk",
+      "銀行破綻",
+      "信用不安"
+    ],
+    "inflation": [
+      "inflation",
+      "consumer prices",
+      "物価",
+      "インフレ"
+    ],
+    "conflict": [
+      "armed conflict",
+      "military attack",
+      "武力衝突",
+      "軍事攻撃"
+    ],
+    "energy": [
+      "oil",
+      "natural gas",
+      "原油",
+      "天然ガス"
+    ],
+    "ai": [
+      "artificial intelligence",
+      "AI",
+      "生成AI",
+      "人工知能"
+    ]
+  },
+  "signals": [
+    {
+      "variable": "received_items",
+      "region": "fed_press",
+      "source": "fed_press",
+      "baseline": 5,
+      "window": 30,
+      "max_gap_days": 1,
+      "horizon_days": 7
+    },
+    {
+      "variable": "received_items",
+      "region": "bis_research",
+      "source": "bis_research",
+      "baseline": 5,
+      "window": 30,
+      "max_gap_days": 1,
+      "horizon_days": 7
+    },
+    {
+      "variable": "mentions.inflation",
+      "region": "fed_press",
+      "source": "fed_press",
+      "baseline": 0,
+      "window": 30,
+      "max_gap_days": 1,
+      "horizon_days": 7
+    },
+    {
+      "variable": "FP.CPI.TOTL.ZG",
+      "region": "JPN",
+      "source": "wb_jpn_inflation",
+      "baseline": 2,
+      "window": 10,
+      "max_gap_days": 366,
+      "horizon_days": 7
+    }
+  ],
+  "questions": [
+    {
+      "id": "fed-captured-volume-7d",
+      "variable": "received_items",
+      "region": "fed_press",
+      "source": "fed_press",
+      "horizon_days": 7,
+      "threshold": 20
+    }
+  ],
+  "integrated_reports": true
+}

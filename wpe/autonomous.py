@@ -33,6 +33,7 @@ def init(db):
     CREATE TABLE IF NOT EXISTS runs(id INTEGER PRIMARY KEY,started_at TEXT NOT NULL,
       finished_at TEXT NOT NULL,status TEXT NOT NULL,summary TEXT NOT NULL);
     ''')
+    db.execute('CREATE TABLE IF NOT EXISTS provider_cooldowns(provider TEXT PRIMARY KEY,until_at TEXT NOT NULL)')
 
 def load_config(path):
     c=json.loads(Path(path).read_text(encoding='utf-8'))
@@ -43,10 +44,27 @@ def load_config(path):
         sid=s.get('id','')
         if not re.fullmatch(r'[a-zA-Z0-9_.-]+',sid): raise ValueError('invalid source id')
         ids.append(sid)
-        if s.get('type') not in ('rss','worldbank','kokkai'): raise ValueError('unknown source type')
+        if s.get('type') not in ('rss','worldbank','kokkai','gdelt','sec','mapped','eurostat','unhcr'): raise ValueError('unknown source type')
         if not isinstance(s.get('interval_seconds'),int) or s['interval_seconds']<60:
             raise ValueError('source interval must be >=60 seconds')
-        if s['type']=='rss': check_url(s['url'])
+        if s['type']=='unhcr':
+            if s.get('direction') not in ('origin','asylum') or type(s.get('start',1990)) is not int or not 1951<=s.get('start',1990)<=2100:raise ValueError('invalid UNHCR source definition')
+        elif s['type']=='eurostat':
+            if s.get('dataset') not in ('crim_off_cat','crim_just_ctz','crim_pris_ctz'):raise ValueError('unsupported Eurostat dataset')
+            if s.get('domain') not in ('crime','justice','migration') or not isinstance(s.get('definition'),str) or not s['definition']:raise ValueError('Eurostat definition required')
+            if s.get('stage') not in ('reported','suspect','prisoner'):raise ValueError('Eurostat stage required')
+        elif s['type']=='gdelt':
+            if s.get('domain') not in ('crime','justice','corporate','policy','religion','education','society','migration','drugs','conflict','military','diplomacy','budget','finance'):raise ValueError('invalid GDELT domain')
+            if not isinstance(s.get('query'),str) or not 3<=len(s['query'])<=250:raise ValueError('invalid GDELT query')
+            if not re.fullmatch(r'[1-9][0-9]?(h|d)',s.get('timespan','1h')):raise ValueError('bounded GDELT timespan required')
+        elif s['type']=='sec':
+            if not isinstance(s.get('cik'),str) or not re.fullmatch(r'[0-9]{1,10}',s['cik']):raise ValueError('SEC CIK required')
+            if s.get('concept') not in (None,'Assets','Liabilities'):raise ValueError('unsupported SEC concept')
+        elif s['type']=='mapped':
+            check_url(s['url'])
+            if s.get('format') not in ('csv','json') or not isinstance(s.get('columns'),dict) or not s['columns']:raise ValueError('mapped format/columns required')
+            if not isinstance(s.get('records_path',[]),list):raise ValueError('records_path must be a list')
+        elif s['type']=='rss': check_url(s['url'])
         elif s['type']=='kokkai':
             if not isinstance(s.get('query'),str) or not s['query'].strip():raise ValueError('kokkai query required')
         else:
@@ -65,10 +83,17 @@ class HTTPSRedirect(urllib.request.HTTPRedirectHandler):
         check_url(newurl)
         return super().redirect_request(req,fp,code,msg,headers,newurl)
 
-def fetch_bytes(url):
+def fetch_bytes(url,user_agent=None):
     check_url(url)
-    opener=urllib.request.build_opener(HTTPSRedirect())
-    req=urllib.request.Request(url,headers={'User-Agent':'WorldPredictionEngine/0.4 research collector'})
+    import ssl
+    try:
+        import truststore
+        context=truststore.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
+    except ImportError:context=ssl.create_default_context()
+    opener=urllib.request.build_opener(HTTPSRedirect(),urllib.request.HTTPSHandler(context=context))
+    agent=user_agent or 'WorldPredictionEngine/0.4 research collector'
+    if not isinstance(agent,str) or '\r' in agent or '\n' in agent:raise ValueError('invalid User-Agent')
+    req=urllib.request.Request(url,headers={'User-Agent':agent})
     last=None
     for _ in range(2):
         try:
@@ -77,6 +102,9 @@ def fetch_bytes(url):
                 body=response.read(MAX_BYTES+1)
             if len(body)>MAX_BYTES: raise ValueError('response exceeds 5 MiB')
             return body
+        except urllib.error.HTTPError as exc:
+            if exc.code==429:raise
+            last=exc
         except OSError as exc: last=exc
     raise last
 
@@ -90,8 +118,16 @@ def error_detail(exc):
         detail['reason']='Network, proxy, DNS or TLS connection failed'
         detail['cause_type']=type(exc.reason).__name__
     elif isinstance(exc,TimeoutError): detail['reason']='Request timed out'
+    elif isinstance(exc,ValueError):detail['reason']=str(exc).replace('\n',' ')[:300]
     else: detail['reason']='Collector failed; inspect source and local configuration'
     return detail
+
+def retry_after_seconds(exc,now):
+    raw=exc.headers.get('Retry-After','') if exc.headers else ''
+    try:
+        delay=int(raw) if raw.isdigit() else int((parsedate_to_datetime(raw)-now).total_seconds())
+    except (TypeError,ValueError,OverflowError):delay=600
+    return max(600,delay)
 
 def poll_delay(source,ok):
     # Retry a failed poll sooner, without tight loops or changing successful cadence.
@@ -149,6 +185,9 @@ def topics_for(text,rules):
 
 def collect(db,s,when,rules,fetcher=fetch_bytes):
     sid=s['id']
+    if s['type'] in ('gdelt','sec','mapped','eurostat','unhcr'):
+        from . import domain_sources
+        return getattr(domain_sources,'collect_'+s['type'])(db,s,when,rules,fetcher)
     if s['type']=='kokkai':
         from .policy_source import collect_kokkai
         return collect_kokkai(db,s,when,rules,fetcher)
@@ -170,17 +209,21 @@ def collect(db,s,when,rules,fetcher=fetch_bytes):
     today=when[:10]; rows=[]; pages=1; page=1
     with db:
         while page<=pages:
+            progress=getattr(fetcher,'progress',None)
+            if progress:progress({'status':'fetching_page','page':page,'total_pages':pages})
             q=urllib.parse.urlencode({'format':'json','date':f"{s.get('start',1960)}:{year-1}",'per_page':1000,'page':page})
             url=f"https://api.worldbank.org/v2/country/{s['country']}/indicator/{s['indicator']}?{q}"
             body=fetcher(url); data=json.loads(body)
             if not isinstance(data,list) or len(data)!=2 or 'pages' not in data[0]:
-                raise ValueError('unexpected World Bank response')
+                error=data[0].get('message',[{}])[0] if isinstance(data,list) and data and isinstance(data[0],dict) else {}
+                raise ValueError('unexpected World Bank response: '+str(error.get('value') or error.get('key') or 'data page missing')[:180])
             pages=int(data[0]['pages'])
             if not 0<=pages<=100: raise ValueError('unexpected page count')
             archive(db,sid,url,body,when)
             for r in data[1] or []:
                 if r['value'] is not None:
-                    rows.append({'variable':s['indicator'],'region':s['country'],
+                    if s['country']=='all' and not re.fullmatch(r'[A-Z0-9]{3}',r.get('countryiso3code','')):continue
+                    rows.append({'variable':s['indicator'],'region':(r['countryiso3code'] if s['country']=='all' else s['country']),
                       'observed_on':f"{int(r['date']):04d}-12-31",'known_on':today,
                       'value':r['value'],'source':sid,'mode':'live'})
             page+=1
@@ -221,7 +264,8 @@ def write_json(path,payload):
     tmp.write_text(json.dumps(payload,ensure_ascii=False,indent=2,allow_nan=False)+'\n',encoding='utf-8')
     os.replace(tmp,path)
 
-def run_cycle(config,db_path,output_dir,now=None,fetcher=fetch_bytes):
+def run_cycle(config,db_path,output_dir,now=None,fetcher=fetch_bytes,progress=None):
+    live_clock=now is None
     now=now or utcnow()
     if now.tzinfo is None: raise ValueError('timezone-aware clock required')
     now=now.astimezone(timezone.utc);when=now.isoformat();today=now.date().isoformat()
@@ -234,20 +278,51 @@ def run_cycle(config,db_path,output_dir,now=None,fetcher=fetch_bytes):
             result={'version':'0.4.0','started_at':when,'mode':'live','sources':[],'signals':[],
                     'forecasts':[],'resolutions':[],'warning':'Coverage is limited to configured sources. Mentions are not verified events.'}
             rules=config.get('topic_keywords',{})
+            from .domain_sources import schema as domain_schema
+            domain_schema(db)
+            gdelt_last_request=None
             for s in config['sources']:
+                request_now=utcnow() if live_clock else now
+                if s['type']=='gdelt':
+                    cooldown=db.execute("SELECT until_at FROM provider_cooldowns WHERE provider='gdelt'").fetchone()
+                    if cooldown and request_now<datetime.fromisoformat(cooldown[0]):
+                        result['sources'].append({'id':s['id'],'status':'provider_cooldown','next_poll_at':cooldown[0]})
+                        continue
+                if s['type']=='sec' and not os.environ.get('WPE_SEC_USER_AGENT'):
+                    result['sources'].append({'id':s['id'],'status':'not_configured','reason':'Set WPE_SEC_USER_AGENT with your contact identity'})
+                    continue
                 last=db.execute('SELECT polled_at,ok FROM polls WHERE source=? ORDER BY id DESC LIMIT 1',(s['id'],)).fetchone()
                 due=datetime.fromisoformat(last[0])+timedelta(seconds=poll_delay(s,last[1])) if last else now
-                if now<due:
+                if request_now<due:
                     result['sources'].append({'id':s['id'],'status':'not_due','next_poll_at':due.isoformat()}); continue
+                if progress:progress({'status':'collecting','source':s['id'],'started_at':when})
                 try:
-                    detail=collect(db,s,when,rules,fetcher)
+                    if s['type']=='gdelt' and fetcher is fetch_bytes:
+                        if gdelt_last_request is not None:
+                            delay=10-(time.monotonic()-gdelt_last_request)
+                            if delay>0:time.sleep(delay)
+                        gdelt_last_request=time.monotonic()
+                    selected_fetcher=fetcher
+                    if s['type']=='sec' and fetcher is fetch_bytes:
+                        selected_fetcher=lambda url:fetch_bytes(url,user_agent=os.environ['WPE_SEC_USER_AGENT'])
+                    if progress:
+                        upstream=selected_fetcher
+                        selected_fetcher=lambda url:upstream(url)
+                        selected_fetcher.progress=lambda item:progress({'source':s['id'],**item})
+                    detail=collect(db,s,when,rules,selected_fetcher)
                     with db: db.execute('INSERT INTO polls(source,polled_at,ok,detail) VALUES(?,?,1,?)',(s['id'],when,json.dumps(detail)))
                     result['sources'].append({'id':s['id'],'status':'ok',**detail})
                 except Exception as exc:
                     # Isolate one broken collector and record failure, never fabricate observations.
                     detail=error_detail(exc)
+                    failure_now=utcnow() if live_clock else now
+                    retry_at=failure_now+timedelta(seconds=poll_delay(s,False))
+                    if s['type']=='gdelt' and isinstance(exc,urllib.error.HTTPError) and exc.code==429:
+                        retry_at=failure_now+timedelta(seconds=retry_after_seconds(exc,failure_now))
+                        with db:db.execute("INSERT OR REPLACE INTO provider_cooldowns VALUES('gdelt',?)",(retry_at.isoformat(),))
                     with db: db.execute('INSERT INTO polls(source,polled_at,ok,detail) VALUES(?,?,0,?)',(s['id'],when,json.dumps(detail)))
-                    result['sources'].append({'id':s['id'],'status':'failed',**detail,'next_poll_at':(now+timedelta(seconds=poll_delay(s,False))).isoformat()})
+                    result['sources'].append({'id':s['id'],'status':'failed',**detail,'next_poll_at':retry_at.isoformat()})
+                if progress:progress(result['sources'][-1])
             for s in config['sources']:
                 if s['type']=='rss': freeze_received_counts(db,s['id'],today,rules)
             for spec in config.get('signals',[]):
@@ -293,9 +368,13 @@ def run_cycle(config,db_path,output_dir,now=None,fetcher=fetch_bytes):
             result['source_health']=[h for h in result['source_health'] if h['source'] in configured]
             for h in result['source_health']:
                 h['next_poll_at']=(datetime.fromisoformat(h['polled_at'])+timedelta(seconds=poll_delay(configured[h['source']],h['ok']))).isoformat()
+                if configured[h['source']]['type']=='gdelt':
+                    cooldown=db.execute("SELECT until_at FROM provider_cooldowns WHERE provider='gdelt'").fetchone()
+                    if cooldown:h['next_poll_at']=max(h['next_poll_at'],cooldown[0])
             result['finished_at']=utcnow().isoformat()
             failures=sum(not r['ok'] for r in result['source_health'])
             result['status']='degraded' if failures else 'ok'
+            result['coverage_incomplete']=any(s['status']=='not_configured' for s in result['sources'])
             result['policy_candidates']=extract_candidates(db,when)
             result['action_candidates']=suggest_actions(db,when)
             from .risk import evaluate as evaluate_risk, report as risk_report
@@ -304,14 +383,27 @@ def run_cycle(config,db_path,output_dir,now=None,fetcher=fetch_bytes):
             except ValueError as exc:
                 result['risk_scenarios']={'status':'evaluation_failed','reason':str(exc)}
                 result['status']='degraded'
-            with db: db.execute('INSERT INTO runs(started_at,finished_at,status,summary) VALUES(?,?,?,?)',
-              (when,result['finished_at'],result['status'],json.dumps(result,ensure_ascii=False)))
             output=Path(output_dir)
             output.mkdir(parents=True,exist_ok=True)
             render_report(db,output/'actors.html')
             risk_report(db,output/'risk.html',when)
+            from .domain_sources import report as domain_report
+            result['domain_coverage']=domain_report(db,output/'intelligence.html',config,today)
+            if config.get('integrated_reports',False):
+                result['analysis_reports']={}
+                from .integrated_reports import generate
+                # Recompute expensive analyses on acquisition attempts or missing outputs.
+                refresh=any(s['status'] in ('ok','failed') for s in result['sources']) or not (output/'relationships'/'index.html').exists()
+                if refresh:
+                    try:result['analysis_reports']=generate(db,output,today)
+                    except (ValueError,OSError) as exc:
+                        result['analysis_reports']={'status':'failed',**error_detail(exc)};result['status']='degraded'
+                else:result['analysis_reports']={'status':'cached','relationships':'relationships/index.html','economic':'economic/index.html'}
+            result['finished_at']=utcnow().isoformat()
             write_json(output/'latest.json',result)
             write_json(output/'runs'/f"{now.strftime('%Y%m%dT%H%M%S%fZ')}.json",result)
+            with db: db.execute('INSERT INTO runs(started_at,finished_at,status,summary) VALUES(?,?,?,?)',
+              (when,result['finished_at'],result['status'],json.dumps(result,ensure_ascii=False)))
             return result
         finally: db.close()
 
@@ -332,7 +424,7 @@ def main():
     signal.signal(signal.SIGTERM,stopping)
     while not stop:
         try:
-            result=run_cycle(load_config(a.config),a.db,a.output)
+            result=run_cycle(load_config(a.config),a.db,a.output,progress=lambda item:print(json.dumps(item,ensure_ascii=False),flush=True))
             print(json.dumps({'status':result['status'],'started_at':result['started_at'],
                              'sources':result['sources'],'forecasts':len(result['forecasts'])},ensure_ascii=False),flush=True)
         except Exception as exc:
